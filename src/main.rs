@@ -27,7 +27,7 @@ fn main() {
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
         // display current status
-        let (_twidth, theight) = termion::terminal_size().unwrap();
+        let (twidth, theight) = termion::terminal_size().unwrap();
 
         print!("{}{}", termion::clear::All, termion::cursor::Goto(1, 1));
         print!("{}Lines total: {}, Unique lines: {}{}", color::Fg(color::Yellow), lines_total, line_counts.len(), style::Reset);
@@ -36,8 +36,16 @@ fn main() {
         for (i, key) in keys.iter().rev().enumerate() {
             if i+1 >= theight as usize { break; }
 
-            // TODO clip to width
-            print!("\n{:width$}: {}", line_counts[*key], key, width=5);
+            // render the full output line
+            let out_line = format!("{:width$}: {}", line_counts[*key], key, width=5);
+
+            let mut out_chars: Vec<char> = out_line.chars().collect();
+            out_chars.truncate(twidth as usize);
+
+            let out_line: String = out_chars.into_iter().collect();
+
+            // clip the line to terminal width
+            print!("\n{}", out_line);
         }
     }
 }
