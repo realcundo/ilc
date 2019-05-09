@@ -1,0 +1,9 @@
+[package]
+name = "ilc"
+version = "0.1.0"
+authors = ["shiftysymbol <32494444+shiftysymbol@users.noreply.github.com>"]
+edition = "2018"
+
+[dependencies]
+termion = "1.5.2"
+regex = "1.1.6"
