@@ -9,8 +9,7 @@ fn main() {
     // keeps track of how often each line has occurred
     let mut line_counts = HashMap::new();
 
-    let mut lines_total = 0u32;
-
+    let mut lines = LineCollector::new();
     let mut has_cleared_screen = false;
 
     for line_or_error in io::stdin().lock().lines() {
@@ -19,7 +18,7 @@ fn main() {
             Err(_) => continue, // input is non-utf8 (maybe binary), ignore the error for now
         };
 
-        lines_total += 1;
+        lines.insert(line.clone());
 
         let line_count = line_counts.entry(line).or_insert(0u32);
         *line_count += 1;
@@ -44,8 +43,8 @@ fn main() {
             "{}{}Lines total: {}, Unique lines: {}{}",
             termion::cursor::Goto(1, 1),
             color::Fg(color::Yellow),
-            lines_total,
-            line_counts.len(),
+            lines.num_total(),
+            lines.num_unique(),
             style::Reset
         );
 
@@ -66,5 +65,34 @@ fn main() {
             // clip the line to terminal width
             print!("\n{}{}", out_line, termion::clear::UntilNewline);
         }
+    }
+}
+
+#[derive(Default, Debug)]
+pub struct LineCollector {
+    line_counts: HashMap<String, usize>,
+    total_lines: usize,
+}
+
+impl LineCollector {
+    pub fn new() -> Self {
+        LineCollector {
+            ..Default::default()
+        }
+    }
+
+    pub fn num_total(&self) -> usize {
+        self.total_lines
+    }
+
+    pub fn num_unique(&self) -> usize {
+        self.line_counts.len()
+    }
+
+    pub fn insert(&mut self, line: String) {
+        self.total_lines += 1;
+
+        let line_count = self.line_counts.entry(line).or_insert(0);
+        *line_count += 1;
     }
 }
