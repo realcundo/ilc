@@ -23,7 +23,7 @@ fn main() {
 
         // get the keys and order them by count and then the actual string
         let mut keys: Vec<_> = line_counts.keys().collect();
-        keys.sort_unstable_by_key(|k| (line_counts.get(*k).unwrap(), *k));
+        keys.sort_unstable_by_key(|k| (line_counts[*k], *k));
 
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
