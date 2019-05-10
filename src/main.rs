@@ -13,9 +13,12 @@ fn main() {
 
     let mut has_cleared_screen = false;
 
-    for line in io::stdin().lock().lines() {
-        let line = line.unwrap();
-        let line = line.trim().to_string();
+    for line_or_error in io::stdin().lock().lines() {
+        let line = match line_or_error {
+            Ok(line) => line.trim().to_string(), // input line is utf8, so trim it
+            Err(_) => continue, // input is non-utf8 (maybe binary), ignore the error for now
+        };
+
         lines_total += 1;
 
         let line_count = line_counts.entry(line).or_insert(0u32);
