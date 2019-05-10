@@ -12,6 +12,8 @@ fn main() {
 
     let mut lines_total = 0u32;
 
+    let mut has_cleared_screen = false;
+
     for line in io::stdin().lock().lines() {
         let line = line.unwrap();
         let line = line.trim().to_string();
@@ -29,7 +31,14 @@ fn main() {
         // display current status
         let (twidth, theight) = termion::terminal_size().unwrap();
 
-        print!("{}{}", termion::clear::All, termion::cursor::Goto(1, 1));
+        // clear the screen the first time, subsequently we make sure we call clear::UntilNewLine for each line
+        // this reduces the flicker since each character is modified only once per loop
+        if !has_cleared_screen {
+            has_cleared_screen = true;
+            print!("{}", termion::clear::All);
+        }
+
+        print!("{}", termion::cursor::Goto(1, 1));
         print!("{}Lines total: {}, Unique lines: {}{}", color::Fg(color::Yellow), lines_total, line_counts.len(), style::Reset);
 
         // iterate over references in reverse to display top first
@@ -45,7 +54,7 @@ fn main() {
             let out_line: String = out_chars.into_iter().collect();
 
             // clip the line to terminal width
-            print!("\n{}", out_line);
+            print!("\n{}{}", out_line, termion::clear::UntilNewline);
         }
     }
 }
