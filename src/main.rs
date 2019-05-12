@@ -1,6 +1,7 @@
 extern crate termion;
 
 use std::collections::HashMap;
+use std::ops::Index;
 
 use std::io::{self, BufRead};
 use termion::{color, style};
@@ -47,7 +48,7 @@ fn main() {
             }
 
             // render the full output line
-            let out_line = format!("{:width$}: {}", lines.get(key).unwrap(), key, width = 5);
+            let out_line = format!("{:width$}: {}", lines[key], key, width = 5);
 
             let mut out_chars: Vec<char> = out_line.chars().collect();
             out_chars.truncate(twidth as usize);
@@ -95,6 +96,16 @@ impl LineCollector {
 
     pub fn iter(&self) -> LineCollectorResultIter {
         LineCollectorResultIter::new(&self.line_counts)
+    }
+}
+
+impl Index<&str> for LineCollector {
+    type Output = usize;
+
+    // TODO why &usize and not usize?
+    // and why is Ouput without &?
+    fn index(&self, key: &str) -> &usize {
+        self.get(key).unwrap()
     }
 }
 
