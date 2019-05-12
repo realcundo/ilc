@@ -95,4 +95,39 @@ impl LineCollector {
         let line_count = self.line_counts.entry(line).or_insert(0);
         *line_count += 1;
     }
+
+    pub fn iter(&self) -> LineCollectorResultIter {
+        LineCollectorResultIter::new(&self.line_counts)
+    }
+}
+
+pub struct LineCollectorResultIter<'a> {
+    idx: usize,
+    sorted_lines: Vec<&'a String>, // TODO use str
+}
+
+// TODO implemenmt IntoIterator?!
+impl<'a> LineCollectorResultIter<'a> {
+    fn new(line_counts: &'a HashMap<String, usize>) -> Self {
+        let mut sorted_lines: Vec<_> = line_counts.keys().collect();
+        sorted_lines.sort_unstable_by_key(|k| (line_counts[*k], *k));
+        LineCollectorResultIter {
+            idx: 0,
+            sorted_lines,
+        }
+    }
+}
+
+impl<'a> Iterator for LineCollectorResultIter<'a> {
+    type Item = &'a str;
+
+    fn next(&mut self) -> Option<&'a str> {
+        // TODO use iterator, not index. Maybe even stor ethe iterator instead of vec?
+        if self.idx >= self.sorted_lines.len() {
+            None
+        } else {
+            self.idx += 1;
+            Some(self.sorted_lines[self.idx - 1])
+        }
+    }
 }
