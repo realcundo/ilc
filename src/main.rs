@@ -7,8 +7,6 @@ use termion::{color, style};
 
 fn main() {
     // keeps track of how often each line has occurred
-    let mut line_counts = HashMap::new();
-
     let mut lines = LineCollector::new();
     let mut has_cleared_screen = false;
 
@@ -18,14 +16,8 @@ fn main() {
             Err(_) => continue, // input is non-utf8 (maybe binary), ignore the error for now
         };
 
+        // create a clone of the string that is owned by "lines"
         lines.insert(line.clone());
-
-        let line_count = line_counts.entry(line).or_insert(0u32);
-        *line_count += 1;
-
-        // get the keys and order them by count and then the actual string
-        let mut keys: Vec<_> = line_counts.keys().collect();
-        keys.sort_unstable_by_key(|k| (line_counts[*k], *k));
 
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
@@ -49,13 +41,13 @@ fn main() {
         );
 
         // iterate over references in reverse to display top first
-        for (i, key) in keys.iter().rev().enumerate() {
+        for (i, key) in lines.iter().enumerate() {
             if i + 1 >= theight as usize {
                 break;
             }
 
             // render the full output line
-            let out_line = format!("{:width$}: {}", line_counts[*key], key, width = 5);
+            let out_line = format!("{:width$}: {}", lines.get(key).unwrap(), key, width = 5);
 
             let mut out_chars: Vec<char> = out_line.chars().collect();
             out_chars.truncate(twidth as usize);
@@ -96,13 +88,17 @@ impl LineCollector {
         *line_count += 1;
     }
 
+    // TODO why &usize and not usize?
+    pub fn get(&self, key: &str) -> Option<&usize> {
+        self.line_counts.get(key)
+    }
+
     pub fn iter(&self) -> LineCollectorResultIter {
         LineCollectorResultIter::new(&self.line_counts)
     }
 }
 
 pub struct LineCollectorResultIter<'a> {
-    idx: usize,
     sorted_lines: Vec<&'a String>, // TODO use str
 }
 
@@ -111,23 +107,15 @@ impl<'a> LineCollectorResultIter<'a> {
     fn new(line_counts: &'a HashMap<String, usize>) -> Self {
         let mut sorted_lines: Vec<_> = line_counts.keys().collect();
         sorted_lines.sort_unstable_by_key(|k| (line_counts[*k], *k));
-        LineCollectorResultIter {
-            idx: 0,
-            sorted_lines,
-        }
+        LineCollectorResultIter { sorted_lines }
     }
 }
 
 impl<'a> Iterator for LineCollectorResultIter<'a> {
-    type Item = &'a str;
+    type Item = &'a String;
 
-    fn next(&mut self) -> Option<&'a str> {
-        // TODO use iterator, not index. Maybe even stor ethe iterator instead of vec?
-        if self.idx >= self.sorted_lines.len() {
-            None
-        } else {
-            self.idx += 1;
-            Some(self.sorted_lines[self.idx - 1])
-        }
+    fn next(&mut self) -> Option<&'a String> {
+        // return in reverse order so just keep popping from vector
+        self.sorted_lines.pop()
     }
 }
