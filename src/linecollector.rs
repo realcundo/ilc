@@ -29,9 +29,8 @@ impl LineCollector {
         *line_count += 1;
     }
 
-    // TODO why &usize and not usize?
-    pub fn get(&self, key: &str) -> Option<&usize> {
-        self.line_counts.get(key)
+    pub fn get(&self, key: &str) -> Option<usize> {
+        self.line_counts.get(key).cloned()
     }
 
     pub fn iter(&self) -> LineCollectorResultIter {
@@ -42,10 +41,8 @@ impl LineCollector {
 impl Index<&str> for LineCollector {
     type Output = usize;
 
-    // TODO why &usize and not usize?
-    // and why is Ouput without &?
-    fn index(&self, key: &str) -> &usize {
-        self.get(key).unwrap()
+    fn index(&self, key: &str) -> &Self::Output {
+        &self.line_counts[key]
     }
 }
 
@@ -69,7 +66,7 @@ impl<'a> LineCollectorResultIter<'a> {
 impl<'a> Iterator for LineCollectorResultIter<'a> {
     type Item = (usize, &'a String);
 
-    fn next(&mut self) -> Option<(usize, &'a String)> {
+    fn next(&mut self) -> Option<Self::Item> {
         // return in reverse order so just keep popping from the vector
         self.sorted_lines.pop()
     }
