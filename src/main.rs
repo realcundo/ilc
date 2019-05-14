@@ -48,7 +48,7 @@ fn main() {
 
         // iterate over references in reverse to display top first
         // only consume (theight-1) top elements
-        for (count, line) in collector.iter().take(theight as usize -1) {
+        for (count, line) in collector.iter().take(theight as usize - 1) {
             // render the full output line
             let out_line = format!("{:width$}: {}", count, line, width = 5);
 
