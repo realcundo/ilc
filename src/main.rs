@@ -41,14 +41,16 @@ fn main() {
             style::Reset
         );
 
-        // iterate over references in reverse to display top first
-        for (i, key) in collector.iter().enumerate() {
-            if i + 1 >= theight as usize {
-                break;
-            }
+        // if not enough space, don't show anything
+        if theight < 2 {
+            continue;
+        }
 
+        // iterate over references in reverse to display top first
+        // only consume (theight-1) top elements
+        for (count, line) in collector.iter().take(theight as usize -1) {
             // render the full output line
-            let out_line = format!("{:width$}: {}", collector[key], key, width = 5);
+            let out_line = format!("{:width$}: {}", count, line, width = 5);
 
             let mut out_chars: Vec<char> = out_line.chars().collect();
             out_chars.truncate(twidth as usize);
