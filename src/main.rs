@@ -8,7 +8,7 @@ use linecollector::LineCollector;
 
 fn main() {
     // keeps track of how often each line has occurred
-    let mut lines = LineCollector::new();
+    let mut collector = LineCollector::new();
     let mut has_cleared_screen = false;
 
     for line_or_error in io::stdin().lock().lines() {
@@ -17,8 +17,8 @@ fn main() {
             Err(_) => continue, // input is non-utf8 (maybe binary), ignore the error for now
         };
 
-        // create a clone of the string that is owned by "lines"
-        lines.insert(line.clone());
+        // create a clone of the string that is owned by "collector"
+        collector.insert(line.clone());
 
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
@@ -33,22 +33,22 @@ fn main() {
         }
 
         print!(
-            "{}{}Lines total: {}, Unique lines: {}{}",
+            "{}{}collector total: {}, Unique collector: {}{}",
             termion::cursor::Goto(1, 1),
             color::Fg(color::Yellow),
-            lines.num_total(),
-            lines.num_unique(),
+            collector.num_total(),
+            collector.num_unique(),
             style::Reset
         );
 
         // iterate over references in reverse to display top first
-        for (i, key) in lines.iter().enumerate() {
+        for (i, key) in collector.iter().enumerate() {
             if i + 1 >= theight as usize {
                 break;
             }
 
             // render the full output line
-            let out_line = format!("{:width$}: {}", lines[key], key, width = 5);
+            let out_line = format!("{:width$}: {}", collector[key], key, width = 5);
 
             let mut out_chars: Vec<char> = out_line.chars().collect();
             out_chars.truncate(twidth as usize);
