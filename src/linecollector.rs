@@ -143,4 +143,27 @@ mod tests {
         assert_eq!(lc.num_total(), 3);
         assert_eq!(lc.num_unique(), 3);
     }
+
+    #[test]
+    fn line_collector_stores_mixed_lines() {
+        let lc = LineCollectorBuilder::new()
+            .add("a")
+            .add("b")
+            .add("c")
+            .add("b")
+            .add("a")
+            .add("b")
+            .build();
+
+        let s_a = "a".to_string();
+        let s_b = "b".to_string();
+        let s_c = "c".to_string();
+
+        let returned_items: Vec<_> = lc.iter().collect();
+        let expected_items = vec![(1, &s_c), (1, &s_b), (1, &s_a)];
+        assert_eq!(returned_items, expected_items);
+
+        assert_eq!(lc.num_total(), 3);
+        assert_eq!(lc.num_unique(), 3);
+    }
 }
