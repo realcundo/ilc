@@ -11,14 +11,20 @@ fn main() {
     let mut collector = LineCollector::new();
     let mut has_cleared_screen = false;
 
-    for line_or_error in io::stdin().lock().lines() {
-        let line = match line_or_error {
-            Ok(line) => line.trim().to_string(), // input line is utf8, so trim it
-            Err(_) => continue, // input is non-utf8 (maybe binary), ignore the error for now
-        };
+    let input_buffer = io::stdin();
+    let mut input_reader = input_buffer.lock();
+    let mut input_line = String::new();
 
-        // create a clone of the string that is owned by "collector"
-        collector.insert(&line);
+    loop {
+        input_line.clear();
+        match input_reader.read_line(&mut input_line) {
+            Ok(0) => break, // quit the loop, EOF
+            Ok(_) => {},    // process the line
+            Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
+        }
+
+        // insert the line into the collector. The collector adopts the line.
+        collector.insert(&input_line.trim_end());
 
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
@@ -33,7 +39,7 @@ fn main() {
         }
 
         print!(
-            "{}{}collector total: {}, Unique collector: {}{}",
+            "{}{}Lines total: {}, Unique lines: {}{}",
             termion::cursor::Goto(1, 1),
             color::Fg(color::Yellow),
             collector.num_total(),
@@ -61,4 +67,7 @@ fn main() {
             print!("\n{}{}", out_line, termion::clear::UntilNewline);
         }
     }
+
+    // insert newline after processing all lines
+    println!();
 }
