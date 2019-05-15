@@ -71,3 +71,76 @@ impl<'a> Iterator for LineCollectorResultIter<'a> {
         self.sorted_lines.pop()
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // Convenience class to build LineCollector instances for testing.
+    struct LineCollectorBuilder(LineCollector);
+
+    impl LineCollectorBuilder {
+        pub fn new() -> Self {
+            LineCollectorBuilder(LineCollector::new())
+        }
+
+        pub fn add(mut self, line: &str) -> Self {
+            self.0.insert(line.to_owned());
+            self
+        }
+
+        pub fn build(self) -> LineCollector {
+            self.0
+        }
+    }
+
+    #[test]
+    fn line_collector_is_empty_by_default() {
+        let lc = LineCollectorBuilder::new().build();
+
+        let returned_items: Vec<_> = lc.iter().collect();
+        let expected_items = vec![];
+        assert_eq!(returned_items, expected_items);
+
+        assert_eq!(lc.num_total(), 0);
+        assert_eq!(lc.num_unique(), 0);
+    }
+
+    #[test]
+    fn line_collector_stores_duplicate_lines() {
+        let lc = LineCollectorBuilder::new()
+            .add("a")
+            .add("a")
+            .add("a")
+            .build();
+
+        let s_a = "a".to_string();
+
+        let returned_items: Vec<_> = lc.iter().collect();
+        let expected_items = vec![(3, &s_a)];
+        assert_eq!(returned_items, expected_items);
+
+        assert_eq!(lc.num_total(), 3);
+        assert_eq!(lc.num_unique(), 1);
+    }
+
+    #[test]
+    fn line_collector_stores_unique_lines() {
+        let lc = LineCollectorBuilder::new()
+            .add("a")
+            .add("b")
+            .add("c")
+            .build();
+
+        let s_a = "a".to_string();
+        let s_b = "b".to_string();
+        let s_c = "c".to_string();
+
+        let returned_items: Vec<_> = lc.iter().collect();
+        let expected_items = vec![(1, &s_c), (1, &s_b), (1, &s_a)];
+        assert_eq!(returned_items, expected_items);
+
+        assert_eq!(lc.num_total(), 3);
+        assert_eq!(lc.num_unique(), 3);
+    }
+}

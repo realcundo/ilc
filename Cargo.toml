@@ -7,3 +7,5 @@ edition = "2018"
 [dependencies]
 termion = "1.5.2"
 regex = "1.1.6"
+
+[dev-dependencies]
