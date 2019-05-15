@@ -160,10 +160,10 @@ mod tests {
         let s_c = "c".to_string();
 
         let returned_items: Vec<_> = lc.iter().collect();
-        let expected_items = vec![(1, &s_c), (1, &s_b), (1, &s_a)];
+        let expected_items = vec![(3, &s_b), (2, &s_a), (1, &s_c)];
         assert_eq!(returned_items, expected_items);
 
-        assert_eq!(lc.num_total(), 3);
+        assert_eq!(lc.num_total(), 6);
         assert_eq!(lc.num_unique(), 3);
     }
 }
