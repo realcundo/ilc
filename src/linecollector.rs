@@ -22,10 +22,12 @@ impl LineCollector {
         self.line_counts.len()
     }
 
-    pub fn insert(&mut self, line: String) {
+    // Inserts the line into collection. Makes a copy of the input
+    // and takes ownership of the line.
+    pub fn insert(&mut self, line: &str) {
         self.total_lines += 1;
 
-        let line_count = self.line_counts.entry(line).or_insert(0);
+        let line_count = self.line_counts.entry(line.to_owned()).or_insert(0);
         *line_count += 1;
     }
 
@@ -76,27 +78,9 @@ impl<'a> Iterator for LineCollectorResultIter<'a> {
 mod tests {
     use super::*;
 
-    // Convenience class to build LineCollector instances for testing.
-    struct LineCollectorBuilder(LineCollector);
-
-    impl LineCollectorBuilder {
-        pub fn new() -> Self {
-            LineCollectorBuilder(LineCollector::new())
-        }
-
-        pub fn add(mut self, line: &str) -> Self {
-            self.0.insert(line.to_owned());
-            self
-        }
-
-        pub fn build(self) -> LineCollector {
-            self.0
-        }
-    }
-
     #[test]
     fn line_collector_is_empty_by_default() {
-        let lc = LineCollectorBuilder::new().build();
+        let lc = LineCollector::new();
 
         let returned_items: Vec<_> = lc.iter().collect();
         let expected_items = vec![];
@@ -108,11 +92,10 @@ mod tests {
 
     #[test]
     fn line_collector_stores_duplicate_lines() {
-        let lc = LineCollectorBuilder::new()
-            .add("a")
-            .add("a")
-            .add("a")
-            .build();
+        let mut lc = LineCollector::new();
+        lc.insert("a");
+        lc.insert("a");
+        lc.insert("a");
 
         let s_a = "a".to_string();
 
@@ -126,11 +109,10 @@ mod tests {
 
     #[test]
     fn line_collector_stores_unique_lines() {
-        let lc = LineCollectorBuilder::new()
-            .add("a")
-            .add("b")
-            .add("c")
-            .build();
+        let mut lc = LineCollector::new();
+        lc.insert("a");
+        lc.insert("b");
+        lc.insert("c");
 
         let s_a = "a".to_string();
         let s_b = "b".to_string();
@@ -145,15 +127,36 @@ mod tests {
     }
 
     #[test]
+    fn duplicate_lines_are_ordered_lexicographically() {
+        let mut lc = LineCollector::new();
+        lc.insert("a");
+        lc.insert("c");
+        lc.insert("b");
+        lc.insert("b");
+        lc.insert("c");
+        lc.insert("a");
+
+        let s_a = "a".to_string();
+        let s_b = "b".to_string();
+        let s_c = "c".to_string();
+
+        let returned_items: Vec<_> = lc.iter().collect();
+        let expected_items = vec![(2, &s_c), (2, &s_b), (2, &s_a)];
+        assert_eq!(returned_items, expected_items);
+
+        assert_eq!(lc.num_total(), 6);
+        assert_eq!(lc.num_unique(), 3);
+    }
+
+    #[test]
     fn line_collector_stores_mixed_lines() {
-        let lc = LineCollectorBuilder::new()
-            .add("a")
-            .add("b")
-            .add("c")
-            .add("b")
-            .add("a")
-            .add("b")
-            .build();
+        let mut lc = LineCollector::new();
+        lc.insert("a");
+        lc.insert("b");
+        lc.insert("c");
+        lc.insert("b");
+        lc.insert("a");
+        lc.insert("b");
 
         let s_a = "a".to_string();
         let s_b = "b".to_string();

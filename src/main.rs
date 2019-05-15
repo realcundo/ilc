@@ -18,7 +18,7 @@ fn main() {
         };
 
         // create a clone of the string that is owned by "collector"
-        collector.insert(line.clone());
+        collector.insert(&line);
 
         // TODO don't rewrite if nothing has changed since last time (on the screen)
 
