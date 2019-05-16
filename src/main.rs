@@ -18,8 +18,8 @@ fn main() {
     loop {
         input_line.clear();
         match input_reader.read_line(&mut input_line) {
-            Ok(0) => break, // quit the loop, EOF
-            Ok(_) => {},    // process the line
+            Ok(0) => break,     // quit the loop, EOF
+            Ok(_) => {}         // process the line
             Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
         }
 
