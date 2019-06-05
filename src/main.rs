@@ -19,6 +19,9 @@ fn main() {
 
     let mut tick_last_displayed: Option<Instant> = None;
 
+    // reading the input is blocking so unless we get an input the screen won't get updated
+    // should use threads and channels to make it non-blocking, e.g.
+    //   https://stackoverflow.com/a/55201400/2011775
     loop {
         input_line.clear();
         match input_reader.read_line(&mut input_line) {
