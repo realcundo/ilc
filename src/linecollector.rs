@@ -1,6 +1,10 @@
 use std::collections::HashMap;
 use std::ops::Index;
 
+use lazysort::SortedBy;
+
+use std::cmp::Ordering::Equal;
+
 #[derive(Default, Debug)]
 pub struct LineCollector {
     line_counts: HashMap<String, usize>,
@@ -35,9 +39,35 @@ impl LineCollector {
         self.line_counts.get(key).cloned()
     }
 
+    #[cfg(feature = "slow_linecollector")]
     pub fn iter(&self) -> LineCollectorResultIter {
         LineCollectorResultIter::new(&self.line_counts)
     }
+
+    #[cfg(not(feature = "slow_linecollector"))]
+    pub fn iter(&self) -> impl Iterator<Item = (usize, &String)> {
+        self.line_counts
+            .iter()
+            // swap count+string around and dereference count so it's copied
+            .map(|(s, c)| (*c, s))
+            // order by count desc, then by name asc
+            .sorted_by(|(c1, s1), (c2, s2)| match c2.cmp(&c1) {
+                Equal => s1.cmp(s2),
+                x => x,
+            })
+    }
+
+    /*
+    //pub fn mytest(before: &Vec<&str>) -> impl Iterator<Item  = &&str> {
+    pub fn test<'vec, 'item>(&self, before: &'vec Vec<&'item str>) -> impl Iterator<Item = &'vec &'item str> +'vec {
+        before.iter().sorted_by(|a, b| {
+            match a.len().cmp(&b.len()) {
+                Equal => a.cmp(b),
+                x => x
+            }
+        })
+    }
+    */
 }
 
 impl Index<&str> for LineCollector {
@@ -48,11 +78,13 @@ impl Index<&str> for LineCollector {
     }
 }
 
+#[cfg(feature = "slow_linecollector")]
 pub struct LineCollectorResultIter<'a> {
     sorted_lines: Vec<(usize, &'a String)>, // TODO use str
 }
 
 // TODO implemenmt IntoIterator?!
+#[cfg(feature = "slow_linecollector")]
 impl<'a> LineCollectorResultIter<'a> {
     fn new(line_counts: &'a HashMap<String, usize>) -> Self {
         // get all key+value pairs, swap them around and dereference the value (count)
@@ -65,6 +97,7 @@ impl<'a> LineCollectorResultIter<'a> {
     }
 }
 
+#[cfg(feature = "slow_linecollector")]
 impl<'a> Iterator for LineCollectorResultIter<'a> {
     type Item = (usize, &'a String);
 
@@ -119,7 +152,7 @@ mod tests {
         let s_c = "c".to_string();
 
         let returned_items: Vec<_> = lc.iter().collect();
-        let expected_items = vec![(1, &s_c), (1, &s_b), (1, &s_a)];
+        let expected_items = vec![(1, &s_a), (1, &s_b), (1, &s_c)];
         assert_eq!(returned_items, expected_items);
 
         assert_eq!(lc.num_total(), 3);
@@ -141,7 +174,7 @@ mod tests {
         let s_c = "c".to_string();
 
         let returned_items: Vec<_> = lc.iter().collect();
-        let expected_items = vec![(2, &s_c), (2, &s_b), (2, &s_a)];
+        let expected_items = vec![(2, &s_a), (2, &s_b), (2, &s_c)];
         assert_eq!(returned_items, expected_items);
 
         assert_eq!(lc.num_total(), 6);

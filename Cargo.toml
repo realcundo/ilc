@@ -9,8 +9,16 @@ termion = "1.5.2"
 regex = "1.1.6"
 lazysort = "0.2.1"
 
+[features]
+default = []
+
+# use slow (and slightly incorrect) implementation of line collector
+slow_linecollector = []
+
 [dev-dependencies]
 criterion = "0.2.11"
+
+
 
 [[bench]]
 path = "src/benchmark.rs"
