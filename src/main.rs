@@ -64,7 +64,8 @@ fn main() {
             let out_line: String = out_chars.into_iter().collect();
 
             // clip the line to terminal width
-            print!("\n{}{}", out_line, termion::clear::UntilNewline);
+            //print!("\n{}{}", out_line, termion::clear::UntilNewline);
+            print!("\n{}{}", termion::clear::CurrentLine, out_line);
         }
     }
 
