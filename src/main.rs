@@ -1,7 +1,10 @@
 extern crate termion;
 
 use std::io::{self, BufRead};
-use std::time::Instant;
+
+use std::sync::{Arc, Mutex};
+use std::thread::JoinHandle;
+use std::{thread, time};
 
 use termion::{color, style};
 
@@ -9,30 +12,23 @@ mod linecollector;
 use linecollector::LineCollector;
 
 fn main() {
-    // keeps track of how often each line has occurred
-    let mut collector = LineCollector::new();
+    // keeps track of how often each line has occurred.
+    // The number of clones is important as well,
+    // if the number drops to one the main printing loop will
+    // finish and the program will exit. It's a hacky way
+    // for the reading thread to signal the main thread that
+    // there is no more input.
+    let collector = Arc::new(Mutex::new(LineCollector::new()));
+
+    // create a second Rc to the collector which is used in the thread
+    // and released when the thread stops (when there is no more
+    // input)
+    let _input_thread = spawn_input_thread(collector.clone());
+
     let mut has_cleared_screen = false;
 
-    let input_buffer = io::stdin();
-    let mut input_reader = input_buffer.lock();
-    let mut input_line = String::new();
-
-    let mut tick_last_displayed: Option<Instant> = None;
-
-    // reading the input is blocking so unless we get an input the screen won't get updated
-    // should use threads and channels to make it non-blocking, e.g.
-    //   https://stackoverflow.com/a/55201400/2011775
-    loop {
-        input_line.clear();
-        match input_reader.read_line(&mut input_line) {
-            Ok(0) => break,     // quit the loop, EOF
-            Ok(_) => {}         // process the line
-            Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
-        }
-
-        // insert the line into the collector. The collector adopts the line.
-        collector.insert(&input_line.trim_end());
-
+    // keep displaying this in a loop for as long as the input thread is running
+    while Arc::strong_count(&collector) > 1 {
         // clear the screen the first time, subsequently we make sure we call clear::UntilNewLine for each line
         // this reduces the flicker since each character is modified only once per loop
         if !has_cleared_screen {
@@ -40,28 +36,53 @@ fn main() {
             print!("{}", termion::clear::All);
         }
 
-        // display current status if enough time has elapsed. Displaying after each line is very expensive
-        let tick_now = Instant::now();
-        if match tick_last_displayed {
-            None => false,
-            Some(tick) => tick_now.duration_since(tick).as_millis() < 5,
-        } {
-            continue;
+        {
+            display_collected_lines(&collector.lock().unwrap());
         }
 
-        tick_last_displayed = Some(tick_now);
-
-        display_collected_lines(&collector);
+        // refresh after a while
+        thread::sleep(time::Duration::from_millis(50));
     }
 
     // display it again in case we ended before we could display everything
     // if we have no lines, don't display anything
+    let collector = collector.lock().unwrap();
     if collector.num_total() > 0 {
         display_collected_lines(&collector);
 
         // insert newline after processing all lines
         println!();
     }
+}
+
+fn spawn_input_thread(
+    line_collector: std::sync::Arc<std::sync::Mutex<linecollector::LineCollector>>,
+) -> JoinHandle<()> {
+    thread::spawn(move || {
+        let input_buffer = io::stdin();
+        let mut input_reader = input_buffer.lock();
+        let mut input_line = String::new();
+
+        // main input loop
+        loop {
+            input_line.clear();
+            match input_reader.read_line(&mut input_line) {
+                Ok(0) => break,     // quit the loop, EOF
+                Ok(_) => {}         // process the line
+                Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
+            }
+
+            // insert the line into the collector. The collector adopts the line.
+            {
+                line_collector
+                    .lock()
+                    .unwrap()
+                    .insert(&input_line.trim_end());
+            }
+        }
+
+        // no more input, quit the thread, releasing the Arc
+    })
 }
 
 fn display_collected_lines(line_collector: &LineCollector) {
