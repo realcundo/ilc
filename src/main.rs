@@ -27,6 +27,8 @@ fn main() {
 
     let mut has_cleared_screen = false;
 
+    let mut last_total_number_of_lines = None;
+
     // keep displaying this in a loop for as long as the input thread is running
     while Arc::strong_count(&collector) > 1 {
         // clear the screen the first time, subsequently we make sure we call clear::UntilNewLine for each line
@@ -37,7 +39,14 @@ fn main() {
         }
 
         {
-            display_collected_lines(&collector.lock().unwrap());
+            let collector = collector.lock().unwrap();
+
+            // only redraw the screen when total number of lines has changed
+            let current_total_number_of_lines = Some(collector.num_total());
+            if current_total_number_of_lines != last_total_number_of_lines {
+                display_collected_lines(&collector);
+                last_total_number_of_lines = current_total_number_of_lines;
+            }
         }
 
         // refresh after a while
