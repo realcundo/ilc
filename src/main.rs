@@ -20,6 +20,17 @@ use termion::{color, style};
 mod linecollector;
 use linecollector::LineCollector;
 
+
+fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
+    let re = Regex::new(src)?;
+    match re.captures_len() {
+        1 | 2 => Ok(re),
+        _ => Err(regex::Error::Syntax(
+            "At most one capture group can be specified".to_string(),
+        )),
+    }
+}
+
 // TODO add docs: https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html
 
 /// Tool to interactively display most common matching lines.
@@ -33,7 +44,12 @@ use linecollector::LineCollector;
 struct Opt {
     /// Only process lines matching REGEX. Non-matching files are ignored. If the REGEX
     /// contains a capture group it will be used to process the input instead of the whole line.
-    #[structopt(name = "REGEX", short = "r", long = "regex")]
+    #[structopt(
+        name = "REGEX",
+        short = "r",
+        long = "regex",
+        parse(try_from_str = "parse_regex")
+    )]
     matching_string: Option<Regex>,
 
     /// Files to process. If none specified stdin is used. To specify stdin explicitly pass in "-".
