@@ -76,16 +76,14 @@ fn main() {
     // input)
     let _input_thread = spawn_input_thread(collector.clone(), opt.clone());
 
-    let mut has_cleared_screen = false;
-
-    let mut last_total_number_of_lines = None;
+    let mut first_display_frame = true;
+    let mut last_total_number_of_lines = 0;
 
     // keep displaying this in a loop for as long as the input thread is running
     while Arc::strong_count(&collector) > 1 {
         // clear the screen the first time, subsequently we make sure we call clear::UntilNewLine for each line
         // this reduces the flicker since each character is modified only once per loop
-        if !has_cleared_screen {
-            has_cleared_screen = true;
+        if first_display_frame {
             print!("{}", termion::clear::All);
         }
 
@@ -93,12 +91,14 @@ fn main() {
             let collector = collector.lock().unwrap();
 
             // only redraw the screen when total number of lines has changed
-            let current_total_number_of_lines = Some(collector.num_total());
-            if current_total_number_of_lines != last_total_number_of_lines {
+            if first_display_frame || last_total_number_of_lines != collector.num_total() {
                 display_collected_lines(&collector);
-                last_total_number_of_lines = current_total_number_of_lines;
             }
+
+            last_total_number_of_lines = collector.num_total();
         }
+
+        first_display_frame = false;
 
         // refresh after a while
         thread::sleep(time::Duration::from_millis(50));
@@ -182,6 +182,9 @@ fn display_collected_lines(line_collector: &LineCollector) {
 
     // update the rest of the screen
     let (twidth, theight) = termion::terminal_size().unwrap();
+
+    // XXX TODO if nothing has been printed out except the first line
+    // the line is NOT printed out for some reason until "\n" is printed
 
     // if not enough space, don't show anything
     if theight < 2 {
