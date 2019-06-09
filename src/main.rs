@@ -2,9 +2,12 @@
 extern crate structopt;
 
 extern crate termion;
+extern crate regex;
 
 use std::path::PathBuf;
 use structopt::StructOpt;
+
+use regex::Regex;
 
 use std::io::{self, BufRead};
 
@@ -27,7 +30,7 @@ use linecollector::LineCollector;
 #[structopt(name = "", version = "", author = "")]
 struct Opt {
     /// Only process lines matching RE. Non-matching files are ignored. If the RE
-    /// contains a group it will be used to process the input instead of the whole line.
+    /// contains a capture group it will be used to process the input instead of the whole line.
     #[structopt(name = "RE", short = "r", long = "regexp")]
     matching_string: Option<String>,
 
