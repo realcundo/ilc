@@ -9,8 +9,9 @@ use structopt::StructOpt;
 
 use regex::Regex;
 
-use std::io::{self, BufRead};
+use std::io::{self, BufRead, BufReader};
 
+use std::fs::File;
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
 use std::{thread, time};
@@ -19,7 +20,6 @@ use termion::{color, style};
 
 mod linecollector;
 use linecollector::LineCollector;
-
 
 fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
     let re = Regex::new(src)?;
@@ -38,8 +38,10 @@ fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
 /// The primary use case is to read stdin from a stream, filter the lines
 /// using a regular expression and periodically display top most common lines.
 ///
+/// Input files (and stdin) are opened and processed in sequence.
+///
 /// See https://docs.rs/regex/#syntax for regex syntax.
-#[derive(StructOpt, Debug)]
+#[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "", version = "", author = "")]
 struct Opt {
     /// Only process lines matching REGEX. Non-matching files are ignored. If the REGEX
@@ -72,7 +74,7 @@ fn main() {
     // create a second Rc to the collector which is used in the thread
     // and released when the thread stops (when there is no more
     // input)
-    let _input_thread = spawn_input_thread(collector.clone());
+    let _input_thread = spawn_input_thread(collector.clone(), opt.clone());
 
     let mut has_cleared_screen = false;
 
@@ -115,32 +117,56 @@ fn main() {
 
 fn spawn_input_thread(
     line_collector: std::sync::Arc<std::sync::Mutex<linecollector::LineCollector>>,
+    opt: Opt,
 ) -> JoinHandle<()> {
     thread::spawn(move || {
-        let input_buffer = io::stdin();
-        let mut input_reader = input_buffer.lock();
-        let mut input_line = String::new();
+        // go over input files and process them one by one
+        if opt.files.is_empty() {
+            // no input files, process stdin only
+            let input_buffer = io::stdin();
+            let mut input_reader = input_buffer.lock();
 
-        // main input loop
-        loop {
-            input_line.clear();
-            match input_reader.read_line(&mut input_line) {
-                Ok(0) => break,     // quit the loop, EOF
-                Ok(_) => {}         // process the line
-                Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
-            }
-
-            // insert the line into the collector. The collector adopts the line.
-            {
-                line_collector
-                    .lock()
-                    .unwrap()
-                    .insert(&input_line.trim_end());
+            process_file(&mut input_reader, &opt.matching_string, &line_collector);
+            return;
+        } else {
+            for filename in opt.files {
+                // simply panic if file can't be opened
+                // XXX better error message! But it gets overwritten by the display thread
+                // XXX mut not needed?! (according to docs but read_line seems to need it)
+                let input_file = File::open(filename).unwrap();
+                let mut input_reader = BufReader::new(input_file);
+                process_file(&mut input_reader, &opt.matching_string, &line_collector);
             }
         }
 
         // no more input, quit the thread, releasing the Arc
     })
+}
+
+fn process_file(
+    input_stream: &mut impl io::BufRead,
+    regex: &Option<Regex>,
+    line_collector: &std::sync::Mutex<linecollector::LineCollector>,
+) {
+    let mut input_line = String::new();
+
+    // main input loop to process input_stream
+    loop {
+        input_line.clear();
+        match input_stream.read_line(&mut input_line) {
+            Ok(0) => break,     // quit the loop, EOF
+            Ok(_) => {}         // process the line
+            Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
+        }
+
+        // insert the line into the collector. The collector adopts the line.
+        {
+            line_collector
+                .lock()
+                .unwrap()
+                .insert(&input_line.trim_end());
+        }
+    }
 }
 
 fn display_collected_lines(line_collector: &LineCollector) {
