@@ -11,6 +11,8 @@ use termion::{color, style};
 mod linecollector;
 use linecollector::LineCollector;
 
+// TODO add docs: https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html
+
 fn main() {
     // keeps track of how often each line has occurred.
     // The number of clones is important as well,
