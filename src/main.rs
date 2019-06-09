@@ -1,8 +1,8 @@
 #[macro_use]
 extern crate structopt;
 
-extern crate termion;
 extern crate regex;
+extern crate termion;
 
 use std::path::PathBuf;
 use structopt::StructOpt;
@@ -26,13 +26,15 @@ use linecollector::LineCollector;
 ///
 /// The primary use case is to read stdin from a stream, filter the lines
 /// using a regular expression and periodically display top most common lines.
+///
+/// See https://docs.rs/regex/#syntax for regex syntax.
 #[derive(StructOpt, Debug)]
 #[structopt(name = "", version = "", author = "")]
 struct Opt {
-    /// Only process lines matching RE. Non-matching files are ignored. If the RE
+    /// Only process lines matching REGEX. Non-matching files are ignored. If the REGEX
     /// contains a capture group it will be used to process the input instead of the whole line.
-    #[structopt(name = "RE", short = "r", long = "regexp")]
-    matching_string: Option<String>,
+    #[structopt(name = "REGEX", short = "r", long = "regex")]
+    matching_string: Option<Regex>,
 
     /// Files to process. If none specified stdin is used. To specify stdin explicitly pass in "-".
     /// Directories are not supported.
