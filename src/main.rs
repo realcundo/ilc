@@ -1,4 +1,10 @@
+#[macro_use]
+extern crate structopt;
+
 extern crate termion;
+
+use std::path::PathBuf;
+use structopt::StructOpt;
 
 use std::io::{self, BufRead};
 
@@ -13,7 +19,27 @@ use linecollector::LineCollector;
 
 // TODO add docs: https://doc.rust-lang.org/rustdoc/what-is-rustdoc.html
 
+/// Tool to interactively display most common matching lines.
+///
+/// The primary use case is to read stdin from a stream, filter the lines
+/// using a regular expression and periodically display top most common lines.
+#[derive(StructOpt, Debug)]
+#[structopt(name = "", version = "", author = "")]
+struct Opt {
+    /// Only process lines matching RE. Non-matching files are ignored. If the RE
+    /// contains a group it will be used to process the input instead of the whole line.
+    #[structopt(name = "RE", short = "r", long = "regexp")]
+    matching_string: Option<String>,
+
+    /// Files to process. If none specified stdin is used. To specify stdin explicitly pass in "-".
+    /// Directories are not supported.
+    #[structopt(name = "FILE", parse(from_os_str))]
+    files: Vec<PathBuf>,
+}
+
 fn main() {
+    let opt = Opt::from_args();
+
     // keeps track of how often each line has occurred.
     // The number of clones is important as well,
     // if the number drops to one the main printing loop will

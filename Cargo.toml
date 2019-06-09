@@ -6,6 +6,7 @@ edition = "2018"
 
 [dependencies]
 termion = "1.5.2"
+structopt = "0.2.17"
 regex = "1.1.6"
 lazysort = "0.2.1"
 
