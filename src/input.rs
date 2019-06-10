@@ -1,9 +1,11 @@
-use std::fs::File;
 use std::io::{self, BufReader};
 use std::path::PathBuf;
 use std::thread;
 
 use std::thread::JoinHandle;
+
+// use ex isntead of std for better error messages
+use ex::fs::File;
 
 use regex::Regex;
 
@@ -13,7 +15,7 @@ pub fn spawn_input_thread(
     regex: Option<Regex>,
     files: Vec<PathBuf>,
     line_collector: std::sync::Arc<std::sync::Mutex<linecollector::LineCollector>>,
-) -> JoinHandle<()> {
+) -> JoinHandle<ex::io::Result<()>> {
     thread::spawn(move || {
         // go over input files and process them one by one
         if files.is_empty() {
@@ -22,19 +24,17 @@ pub fn spawn_input_thread(
             let mut input_reader = input_buffer.lock();
 
             process_file(&mut input_reader, &regex, &line_collector);
-            return;
         } else {
             for filename in files {
-                // simply panic if file can't be opened
-                // XXX better error message! But it gets overwritten by the display thread
-                // XXX mut not needed?! (according to docs but read_line seems to need it)
-                let input_file = File::open(filename).unwrap();
+                // return if file can't be opened
+                let input_file = File::open(filename)?;
                 let mut input_reader = BufReader::new(input_file);
                 process_file(&mut input_reader, &regex, &line_collector);
             }
         }
 
         // no more input, quit the thread, releasing the Arc
+        Ok(())
     })
 }
 

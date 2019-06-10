@@ -68,7 +68,7 @@ fn main() {
     // create a second Rc to the collector which is used in the thread
     // and released when the thread stops (when there is no more
     // input)
-    let _input_thread = spawn_input_thread(
+    let input_thread = spawn_input_thread(
         opt.matching_string.clone(),
         opt.files.clone(),
         collector.clone(),
@@ -111,6 +111,14 @@ fn main() {
         // insert newline after processing all lines
         println!();
     }
+
+    // the thread is done so get its result and print any error that might've been produced
+    // XXX unwrap() since we don't expect the thread to have panicked
+    // XXX use correct return code when exitting the process
+    match input_thread.join().unwrap() {
+        Ok(_) => (),
+        Err(x) => println!("\nError: {}", x),
+    };
 }
 
 fn display_collected_lines(line_collector: &LineCollector) {
