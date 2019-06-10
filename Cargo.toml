@@ -24,3 +24,8 @@ criterion = "0.2"
 path = "src/benchmark.rs"
 name = "benchmark"
 harness = false
+
+[profile.release]
+lto = true
+opt-level = 'z'  # Optimize for size
+codegen-units = 1
