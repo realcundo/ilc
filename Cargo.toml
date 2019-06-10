@@ -5,11 +5,11 @@ authors = ["shiftysymbol <32494444+shiftysymbol@users.noreply.github.com>"]
 edition = "2018"
 
 [dependencies]
-termion = "1.5.2"
-structopt = "0.2.17"
+termion = "1.5"
+structopt = "0.2"
 regex = "1"
-lazysort = "0.2.1"
-ex = "0.1.3"
+lazysort = "0.2"
+ex = "0.1"
 
 [features]
 default = []
@@ -18,9 +18,7 @@ default = []
 slow_linecollector = []
 
 [dev-dependencies]
-criterion = "0.2.11"
-
-
+criterion = "0.2"
 
 [[bench]]
 path = "src/benchmark.rs"
