@@ -6,11 +6,14 @@ use std::{
 
 use regex::Regex;
 
-// use ex isntead of std for better error messages
+// use ex instead of std for better error messages
 use ex::fs::File;
 
 use crate::linecollector;
 
+/// Spawn a new thread that reads the contents of `files` and feed lines to
+/// `line_collector` if `regex` matches. If `files` is empty read the `stdin`.
+/// Termninate the thread on first io error.
 pub fn spawn_input_thread(
     regex: Option<Regex>,
     files: Vec<PathBuf>,
@@ -38,6 +41,9 @@ pub fn spawn_input_thread(
     })
 }
 
+/// Consume the `input_stream` and the lines to `line_collector` if `regex`
+/// matches. This function block until all input is consumed or an error occurs.
+/// Returns nothing.
 fn process_file(
     input_stream: &mut impl io::BufRead,
     regex: &Option<Regex>,
@@ -61,7 +67,8 @@ fn process_file(
             None => input_line.trim_end(),
             Some(re) => match re.captures(&input_line) {
                 None => continue, // no match, go to the next line
-                Some(captures) => captures.get(captures.len() - 1).unwrap().as_str(), /* XXX this is a copy since captures doesn't live longer than s */
+                // XXX this is a copy since captures don't live longer than s. Maybe can be fixed?
+                Some(captures) => captures.get(captures.len() - 1).unwrap().as_str(),
             },
         };
 
