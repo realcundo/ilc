@@ -1,0 +1,10 @@
+# run unstable like:
+# rustup run nightly cargo fmt -- --unstable-features
+unstable_features = true
+
+merge_imports = true
+reorder_impl_items = true
+wrap_comments = true
+
+# report_todo = "Always"
+# report_fixme = "Always"
