@@ -1,15 +1,13 @@
 use std::{
     io::{self, BufReader},
     path::PathBuf,
-    thread,
+    thread::{self, JoinHandle},
 };
 
-use std::thread::JoinHandle;
+use regex::Regex;
 
 // use ex isntead of std for better error messages
 use ex::fs::File;
-
-use regex::Regex;
 
 use crate::linecollector;
 

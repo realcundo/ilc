@@ -1,21 +1,19 @@
 use std::path::PathBuf;
-use structopt::StructOpt;
 
 use regex::Regex;
-
 use std::{
     sync::{Arc, Mutex},
     thread, time,
 };
 
+use structopt::StructOpt;
 use termion::{color, style};
 
 mod input;
 mod linecollector;
 
-use linecollector::LineCollector;
-
 use input::spawn_input_thread;
+use linecollector::LineCollector;
 
 fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
     let re = Regex::new(src)?;

@@ -1,8 +1,5 @@
-use std::{collections::HashMap, ops::Index};
-
 use lazysort::SortedBy;
-
-use std::cmp::Ordering::Equal;
+use std::{cmp::Ordering::Equal, collections::HashMap, ops::Index};
 
 #[derive(Default, Debug)]
 pub struct LineCollector {
