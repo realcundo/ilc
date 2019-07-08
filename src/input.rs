@@ -1,6 +1,8 @@
-use std::io::{self, BufReader};
-use std::path::PathBuf;
-use std::thread;
+use std::{
+    io::{self, BufReader},
+    path::PathBuf,
+    thread,
+};
 
 use std::thread::JoinHandle;
 
@@ -54,13 +56,14 @@ fn process_file(
             Err(_) => continue, // ignore the line and read the next one. Line is probably non-utf8
         }
 
-        // match the whole line if there is no regex, otherwise use the regex to match&extract the value.
-        // Use the last capture group (there is either 1 or 2 capture groups)
+        // match the whole line if there is no regex, otherwise use the regex to
+        // match&extract the value. Use the last capture group (there is either
+        // 1 or 2 capture groups)
         let s = match regex {
             None => input_line.trim_end(),
             Some(re) => match re.captures(&input_line) {
                 None => continue, // no match, go to the next line
-                Some(captures) => captures.get(captures.len() - 1).unwrap().as_str(), // XXX this is a copy since captures doesn't live longer than s
+                Some(captures) => captures.get(captures.len() - 1).unwrap().as_str(), /* XXX this is a copy since captures doesn't live longer than s */
             },
         };
 

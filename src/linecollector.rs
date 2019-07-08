@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use std::ops::Index;
+use std::{collections::HashMap, ops::Index};
 
 use lazysort::SortedBy;
 

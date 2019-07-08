@@ -3,8 +3,10 @@ use structopt::StructOpt;
 
 use regex::Regex;
 
-use std::sync::{Arc, Mutex};
-use std::{thread, time};
+use std::{
+    sync::{Arc, Mutex},
+    thread, time,
+};
 
 use termion::{color, style};
 
@@ -38,8 +40,9 @@ fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
 #[derive(StructOpt, Debug, Clone)]
 #[structopt(name = "", version = "", author = "")]
 struct Opt {
-    /// Only process lines matching REGEX. Non-matching files are ignored. If the REGEX
-    /// contains a capture group it will be used to process the input instead of the whole line.
+    /// Only process lines matching REGEX. Non-matching files are ignored. If
+    /// the REGEX contains a capture group it will be used to process the
+    /// input instead of the whole line.
     #[structopt(
         name = "REGEX",
         short = "r",
@@ -48,8 +51,8 @@ struct Opt {
     )]
     matching_string: Option<Regex>,
 
-    /// Files to process. If none specified stdin is used. To specify stdin explicitly pass in "-".
-    /// Directories are not supported.
+    /// Files to process. If none specified stdin is used. To specify stdin
+    /// explicitly pass in "-". Directories are not supported.
     #[structopt(name = "FILE", parse(from_os_str))]
     files: Vec<PathBuf>,
 }
@@ -79,8 +82,9 @@ fn main() {
 
     // keep displaying this in a loop for as long as the input thread is running
     while Arc::strong_count(&collector) > 1 {
-        // clear the screen the first time, subsequently we make sure we call clear::UntilNewLine for each line
-        // this reduces the flicker since each character is modified only once per loop
+        // clear the screen the first time, subsequently we make sure we call
+        // clear::UntilNewLine for each line this reduces the flicker since each
+        // character is modified only once per loop
         if first_display_frame {
             print!("{}", termion::clear::All);
         }
@@ -112,8 +116,8 @@ fn main() {
         println!();
     }
 
-    // the thread is done so get its result and print any error that might've been produced
-    // XXX unwrap() since we don't expect the thread to have panicked
+    // the thread is done so get its result and print any error that might've been
+    // produced XXX unwrap() since we don't expect the thread to have panicked
     // XXX use correct return code when exitting the process
     match input_thread.join().unwrap() {
         Ok(_) => (),
@@ -150,8 +154,8 @@ fn display_collected_lines(line_collector: &LineCollector) {
         let out_line = format!("{:width$}: {}", count, line, width = 5);
 
         // clear currrent line and print the trimmed string
-        // printing and the clearing the rest of the line would be more efficient but termion::clear::UntilNewline
-        // seems to leave artefacts
+        // printing and the clearing the rest of the line would be more efficient but
+        // termion::clear::UntilNewline seems to leave artefacts
         print!(
             "\n{}{:.width$}",
             termion::clear::CurrentLine,
