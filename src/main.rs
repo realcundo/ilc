@@ -149,13 +149,14 @@ fn display_collected_lines(line_collector: &LineCollector) {
         // render the full output line
         let out_line = format!("{:width$}: {}", count, line, width = 5);
 
-        let mut out_chars: Vec<char> = out_line.chars().collect();
-        out_chars.truncate(twidth as usize);
-
-        let out_line: String = out_chars.into_iter().collect();
-
-        // clip the line to terminal width
-        //print!("\n{}{}", out_line, termion::clear::UntilNewline);
-        print!("\n{}{}", termion::clear::CurrentLine, out_line);
+        // clear currrent line and print the trimmed string
+        // printing and the clearing the rest of the line would be more efficient but termion::clear::UntilNewline
+        // seems to leave artefacts
+        print!(
+            "\n{}{:.width$}",
+            termion::clear::CurrentLine,
+            out_line,
+            width = twidth as usize
+        );
     }
 }
