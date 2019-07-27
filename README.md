@@ -1,6 +1,6 @@
 # ilc - Interactive Line Counter
 [![dependency status](https://deps.rs/repo/github/realcundo/ilc/status.svg)](https://deps.rs/repo/github/realcundo/ilc)
-[![GitHub license](https://img.shields.io/github/license/realcundo/ilc.svg)](https://github.com/realcundo/ilc/blob/master/LICENSE)
+[![GitHub license](https://img.shields.io/github/license/realcundo/ilc)](https://github.com/realcundo/ilc/blob/master/LICENSE)
 
 Interactive Line Counter is a command line tool to read input lines from a stream and display most common lines together with their count. It can optionally extract portions of input lines using regular expressions.
 
