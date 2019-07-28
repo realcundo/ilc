@@ -21,6 +21,8 @@ tail -f example.log | ilc
 # The regexp captures everything except the timestamp and client details.
 redis-cli MONITOR | ilc -r "[0-9.]+\s+\[.*\]\s+(.*)"
 ```
+See the above example in action using `redis-benchmark`:
+[https://asciinema.org/a/JQ2yY9pBo5QKcpprzEIfGq7BR](https://asciinema.org/a/JQ2yY9pBo5QKcpprzEIfGq7BR?autoplay=1)
 
 ## Usage
 
