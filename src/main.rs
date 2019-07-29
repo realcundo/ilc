@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use regex::Regex;
 use std::{
     sync::{Arc, Mutex},
-    thread, time,
-    time::Instant,
+    thread,
+    time::{self, Instant},
 };
 
 use structopt::StructOpt;
@@ -135,8 +135,9 @@ fn main() {
 fn display_collected_lines(line_collector: &LineCollector) {
     // print the status line
     print!(
-        "{}{}Lines total: {}, Unique lines: {}{}",
+        "{}{}{}Lines total: {}, Unique lines: {}{}",
         termion::cursor::Goto(1, 1),
+        termion::clear::CurrentLine,
         color::Fg(color::Yellow),
         line_collector.num_total(),
         line_collector.num_unique(),
@@ -170,4 +171,6 @@ fn display_collected_lines(line_collector: &LineCollector) {
             width = twidth as usize
         );
     }
+
+    print!("{}", termion::clear::AfterCursor);
 }
