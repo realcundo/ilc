@@ -4,6 +4,7 @@ use regex::Regex;
 use std::{
     sync::{Arc, Mutex},
     thread, time,
+    time::Instant,
 };
 
 use structopt::StructOpt;
@@ -78,6 +79,8 @@ fn main() {
     let mut first_display_frame = true;
     let mut last_total_number_of_lines = 0;
 
+    let mut next_forced_redraw = Instant::now();
+
     // keep displaying this in a loop for as long as the input thread is running
     while Arc::strong_count(&collector) > 1 {
         // clear the screen the first time, subsequently we make sure we call
@@ -91,8 +94,14 @@ fn main() {
             let collector = collector.lock().unwrap();
 
             // only redraw the screen when total number of lines has changed
-            if first_display_frame || last_total_number_of_lines != collector.num_total() {
+            if first_display_frame
+                || last_total_number_of_lines != collector.num_total()
+                || Instant::now() >= next_forced_redraw
+            {
                 display_collected_lines(&collector);
+
+                // refresh every 5s. Useful if the screen size changes.
+                next_forced_redraw = Instant::now() + time::Duration::from_secs(5);
             }
 
             last_total_number_of_lines = collector.num_total();
