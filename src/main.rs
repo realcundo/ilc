@@ -57,6 +57,15 @@ struct Opt {
 }
 
 fn main() {
+    // run the application in another function so that everything is dropped as
+    // it should be before calling exit()
+    match run_app() {
+        Ok(_) => std::process::exit(exitcode::OK),
+        Err(code) => std::process::exit(code),
+    };
+}
+
+fn run_app() -> Result<(), i32> {
     let opt = Opt::from_args();
 
     // keeps track of how often each line has occurred.
@@ -124,12 +133,14 @@ fn main() {
     }
 
     // the thread is done so get its result and print any error that might've been
-    // produced XXX unwrap() since we don't expect the thread to have panicked
-    // XXX use correct return code when exitting the process
+    // produced. unwrap() since we don't expect the thread to have panicked
     match input_thread.join().unwrap() {
-        Ok(_) => (),
-        Err(x) => println!("\nError: {}", x),
-    };
+        Ok(_) => Ok(()),
+        Err(x) => {
+            println!("\nError: {}", x);
+            Err(exitcode::IOERR)
+        }
+    }
 }
 
 fn display_collected_lines(line_collector: &LineCollector) {
