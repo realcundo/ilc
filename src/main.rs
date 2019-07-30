@@ -155,21 +155,34 @@ fn display_collected_lines(line_collector: &LineCollector) {
         return;
     }
 
+    // Width of the "count" field. Will be initialised when the first
+    // (most frequent, i.e. the largest number) is printed out.
+    let mut count_width = 0;
+
     // iterate over references in reverse to display top first
     // only consume (theight-1) top elements
     for (count, line) in line_collector.iter().take(theight as usize - 1) {
-        // render the full output line
-        let out_line = format!("{:width$}: {}", count, line, width = 5);
+        // clear the line and print the count:
+        if count_width == 0 {
+            // we don't know the width so calculate it from the first/largest count
+            count_width = (count as f32).log10().floor() as usize + 1;
+        }
 
-        // clear currrent line and print the trimmed string
-        // printing and the clearing the rest of the line would be more efficient but
-        // termion::clear::UntilNewline seems to leave artefacts
         print!(
-            "\n{}{:.width$}",
+            "\n{}{:width$}",
             termion::clear::CurrentLine,
-            out_line,
-            width = twidth as usize
+            count,
+            width = count_width
         );
+
+        // print the line if there is still enough space
+        if count_width + 2 < twidth as usize {
+            print!(
+                ": {:.width$}",
+                line,
+                width = twidth as usize - count_width - 2
+            );
+        }
     }
 
     print!("{}", termion::clear::AfterCursor);
