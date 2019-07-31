@@ -12,20 +12,6 @@ lazysort = "0.2"
 ex = "0.1"
 exitcode = "1"
 
-[features]
-default = []
-
-# use slow (and slightly incorrect) implementation of line collector
-slow_linecollector = []
-
-[dev-dependencies]
-criterion = "0.2"
-
-[[bench]]
-path = "src/benchmark.rs"
-name = "benchmark"
-harness = false
-
 [profile.release]
 lto = true
 opt-level = 'z'  # Optimize for size
