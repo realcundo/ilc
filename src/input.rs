@@ -9,31 +9,32 @@ use regex::Regex;
 // use ex instead of std for better error messages
 use ex::fs::File;
 
-use crate::linecollector;
+use crate::{filepaths::FilePathParser, linecollector};
 
 /// Spawn a new thread that reads the contents of `files` and feed lines to
 /// `line_collector` if `regex` matches. If `files` is empty read the `stdin`.
 /// Termninate the thread on first io error.
 pub fn spawn_input_thread(
     regex: Option<Regex>,
-    files: Vec<PathBuf>,
+    input_files: FilePathParser,
     line_collector: std::sync::Arc<std::sync::Mutex<linecollector::LineCollector>>,
 ) -> JoinHandle<ex::io::Result<()>> {
     thread::spawn(move || {
         // go over input files and process them one by one
-        if files.is_empty() {
+        for filename in input_files.files {
+            // return if file can't be opened
+            let input_file = File::open(filename)?;
+            let mut input_reader = BufReader::new(input_file);
+            process_file(&mut input_reader, &regex, &line_collector);
+        }
+
+        // process stdin as last
+        if input_files.has_stdin {
             // no input files, process stdin only
             let input_buffer = io::stdin();
             let mut input_reader = input_buffer.lock();
 
             process_file(&mut input_reader, &regex, &line_collector);
-        } else {
-            for filename in files {
-                // return if file can't be opened
-                let input_file = File::open(filename)?;
-                let mut input_reader = BufReader::new(input_file);
-                process_file(&mut input_reader, &regex, &line_collector);
-            }
         }
 
         // no more input, quit the thread, releasing the Arc

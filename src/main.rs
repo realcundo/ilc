@@ -10,9 +10,11 @@ use std::{
 use structopt::StructOpt;
 use termion::{color, style};
 
+mod filepaths;
 mod input;
 mod linecollector;
 
+use filepaths::FilePathParser;
 use input::spawn_input_thread;
 use linecollector::LineCollector;
 
@@ -81,7 +83,7 @@ fn run_app() -> Result<(), i32> {
     // input)
     let input_thread = spawn_input_thread(
         opt.matching_string.clone(),
-        opt.files.clone(),
+        FilePathParser::from(opt.files),
         collector.clone(),
     );
 
