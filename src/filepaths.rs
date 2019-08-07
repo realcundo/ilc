@@ -10,31 +10,22 @@ pub struct FilePathParser {
     pub has_stdin: bool,
 }
 
-impl From<Vec<PathBuf>> for FilePathParser {
-    fn from(files: Vec<PathBuf>) -> Self {
-        let mut result = FilePathParser {
-            // we'll have at most files.len() elements
-            files: Vec::with_capacity(files.len()),
-            has_stdin: false,
-        };
-
+impl FilePathParser {
+    pub fn new(files: impl IntoIterator<Item = impl Into<PathBuf>>) -> Self {
         let dash = PathBuf::from("-");
 
-        // copy all elements except dash. Dash means stdin.
-        for f in files {
-            if f == dash {
-                result.has_stdin = true;
-            } else {
-                result.files.push(f);
-            }
-        }
+        // assume the number of "-" in the input is at most one so it's more
+        // efficient to simply copy the input sequence and then remove "-".
+        let mut files = files.into_iter().map(Into::into).collect::<Vec<_>>();
+        let old_size = files.len();
 
-        // if no files, default to stdin
-        if result.files.is_empty() {
-            result.has_stdin = true
-        }
+        files.retain(|f| *f != dash);
 
-        result
+        // stdin should be true if we've removed at least one dash or if the input
+        // is empty
+        let has_stdin = (files.len() != old_size) || (old_size == 0);
+
+        Self { files, has_stdin }
     }
 }
 
@@ -44,10 +35,10 @@ mod tests {
 
     #[test]
     fn empty_input_is_stdin_by_default() {
-        let input = vec![];
+        let input: Vec<PathBuf> = vec![];
         let expected = input.clone();
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -58,7 +49,7 @@ mod tests {
         let input = vec![PathBuf::from("file1")];
         let expected = input.clone();
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, false);
@@ -73,7 +64,7 @@ mod tests {
         ];
         let expected = input.clone();
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, false);
@@ -88,7 +79,7 @@ mod tests {
         ];
         let expected = input.clone();
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, false);
@@ -100,7 +91,7 @@ mod tests {
 
         let expected: Vec<PathBuf> = vec![];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -112,7 +103,7 @@ mod tests {
 
         let expected: Vec<PathBuf> = vec![];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -128,7 +119,7 @@ mod tests {
 
         let expected = vec![PathBuf::from("file1"), PathBuf::from("file2")];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -144,7 +135,7 @@ mod tests {
 
         let expected = vec![PathBuf::from("file1"), PathBuf::from("file2")];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -160,7 +151,7 @@ mod tests {
 
         let expected = vec![PathBuf::from("file1"), PathBuf::from("file2")];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);
@@ -185,7 +176,7 @@ mod tests {
             PathBuf::from("file2"),
         ];
 
-        let fp = FilePathParser::from(input);
+        let fp = FilePathParser::new(input);
 
         assert_eq!(fp.files, expected);
         assert_eq!(fp.has_stdin, true);

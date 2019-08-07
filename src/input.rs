@@ -1,6 +1,5 @@
 use std::{
     io::{self, BufReader},
-    path::PathBuf,
     thread::{self, JoinHandle},
 };
 

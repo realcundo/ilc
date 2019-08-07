@@ -83,7 +83,7 @@ fn run_app() -> Result<(), i32> {
     // input)
     let input_thread = spawn_input_thread(
         opt.matching_string.clone(),
-        FilePathParser::from(opt.files),
+        FilePathParser::new(opt.files),
         collector.clone(),
     );
 
