@@ -3,6 +3,11 @@ name = "ilc"
 version = "0.1.0"
 authors = ["Peter Cunderlik <realcundo@users.noreply.github.com>"]
 edition = "2018"
+description = "Interactive Line Counter is a command line tool to read input lines from a stream and display most common lines together with their count. It can optionally extract portions of input lines using regular expressions."
+homepage = "https://github.com/realcundo/ilc"
+repository = "https://github.com/realcundo/ilc"
+readme = "README.md"
+license = "Apache-2.0"
 
 [dependencies]
 termion = "1.5"
