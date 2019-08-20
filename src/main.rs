@@ -148,7 +148,7 @@ fn run_app() -> Result<(), i32> {
 fn display_collected_lines(line_collector: &LineCollector) {
     // print the status line
     print!(
-        "{}{}{}Lines total: {}, Unique lines: {}{}",
+        "{}{}{}{} total, {} unique lines{}",
         termion::cursor::Goto(1, 1),
         termion::clear::CurrentLine,
         color::Fg(color::Yellow),
