@@ -1,7 +1,9 @@
+name: Rust
+
 on: [push]
 
 jobs:
-  test:
+  build:
     name: Test on ${{ matrix.os }}
 
     runs-on: ${{ matrix.os }}
@@ -12,7 +14,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+    - name: Build
+      run: cargo build --verbose
     - name: Clippy
       run: cargo clippy
     - name: Run tests
-      run: cargo test
+      run: cargo test --verbose
