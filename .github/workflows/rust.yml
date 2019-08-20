@@ -1,16 +1,17 @@
-name: Rust
-
 on: [push]
 
 jobs:
-  build:
+  test:
+    name: Test on ${{ matrix.os }}
 
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macOS-latest]
 
     steps:
     - uses: actions/checkout@v1
-    - name: Build
-      run: cargo build
     - name: Clippy
       run: cargo clippy
     - name: Run tests
