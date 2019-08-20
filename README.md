@@ -1,4 +1,5 @@
 # ilc - Interactive Line Counter
+[![Actions Status](https://github.com/realcundo/ilc/workflows/Build/badge.svg)](https://github.com/realcundo/ilc/actions)
 [![dependency status](https://deps.rs/repo/github/realcundo/ilc/status.svg)](https://deps.rs/repo/github/realcundo/ilc)
 [![GitHub license](https://img.shields.io/github/license/realcundo/ilc)](https://github.com/realcundo/ilc/blob/master/LICENSE)
 
