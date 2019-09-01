@@ -70,6 +70,12 @@ fn main() {
 fn run_app() -> Result<(), i32> {
     let opt = Opt::from_args();
 
+    // make sure stdout is a TTY
+    if !termion::is_tty(&std::io::stdout()) {
+        println!("stdout is not a TTY, can't display interactively");
+        return Err(exitcode::UNAVAILABLE);
+    }
+
     // keeps track of how often each line has occurred.
     // The number of clones is important as well,
     // if the number drops to one the main printing loop will
@@ -158,6 +164,7 @@ fn display_collected_lines(line_collector: &LineCollector) {
     );
 
     // update the rest of the screen
+    // unwrap panics if stdout is not a tty
     let (twidth, theight) = termion::terminal_size().unwrap();
 
     // XXX TODO if nothing has been printed out except the first line
