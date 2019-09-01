@@ -39,7 +39,7 @@ fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
 ///
 /// See https://docs.rs/regex/#syntax for regex syntax.
 #[derive(StructOpt, Debug, Clone)]
-#[structopt(name = "", version = "", author = "")]
+#[structopt(no_version, name = "")]
 struct Opt {
     /// Only process lines matching REGEX. Non-matching files are ignored. If
     /// the REGEX contains a capture group it will be used to process the
@@ -48,7 +48,7 @@ struct Opt {
         name = "REGEX",
         short = "r",
         long = "regex",
-        parse(try_from_str = "parse_regex")
+        parse(try_from_str = parse_regex)
     )]
     matching_string: Option<Regex>,
 
