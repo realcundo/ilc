@@ -72,7 +72,7 @@ fn run_app() -> Result<(), i32> {
 
     // make sure stdout is a TTY
     if !termion::is_tty(&std::io::stdout()) {
-        println!("stdout is not a TTY, can't display interactively");
+        eprintln!("stdout is not a TTY, can't display interactively");
         return Err(exitcode::UNAVAILABLE);
     }
 
@@ -145,7 +145,7 @@ fn run_app() -> Result<(), i32> {
     match input_thread.join().unwrap() {
         Ok(_) => Ok(()),
         Err(x) => {
-            println!("\nError: {}", x);
+            eprintln!("\nError: {}", x);
             Err(exitcode::IOERR)
         }
     }
