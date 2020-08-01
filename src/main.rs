@@ -2,13 +2,21 @@ use std::path::PathBuf;
 
 use regex::Regex;
 use std::{
+    io::{stdout, Write},
     sync::{Arc, Mutex},
     thread,
     time::{self, Instant},
 };
 
 use structopt::StructOpt;
-use termion::{color, style};
+
+use crossterm::{
+    cursor, execute,
+    style::{self, Colorize},
+    terminal,
+    tty::IsTty,
+    QueueableCommand,
+};
 
 mod filepaths;
 mod input;
@@ -18,7 +26,7 @@ use filepaths::FilePathParser;
 use input::spawn_input_thread;
 use linecollector::LineCollector;
 
-fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
+fn parse_regex(src: &str) -> std::result::Result<Regex, regex::Error> {
     let re = Regex::new(src)?;
     match re.captures_len() {
         1 | 2 => Ok(re),
@@ -67,11 +75,11 @@ fn main() {
     };
 }
 
-fn run_app() -> Result<(), i32> {
+fn run_app() -> std::result::Result<(), i32> {
     let opt = Opt::from_args();
 
     // make sure stdout is a TTY
-    if !termion::is_tty(&std::io::stdout()) {
+    if !stdout().is_tty() {
         eprintln!("stdout is not a TTY, can't display interactively");
         return Err(exitcode::UNAVAILABLE);
     }
@@ -104,7 +112,7 @@ fn run_app() -> Result<(), i32> {
         // clear::UntilNewLine for each line this reduces the flicker since each
         // character is modified only once per loop
         if first_display_frame {
-            print!("{}", termion::clear::All);
+            execute!(stdout(), terminal::Clear(terminal::ClearType::All)).unwrap();
         }
 
         {
@@ -115,7 +123,7 @@ fn run_app() -> Result<(), i32> {
                 || last_total_number_of_lines != collector.num_total()
                 || Instant::now() >= next_forced_redraw
             {
-                display_collected_lines(&collector);
+                display_collected_lines(&collector).unwrap();
 
                 // refresh every 5s. Useful if the screen size changes.
                 next_forced_redraw = Instant::now() + time::Duration::from_secs(5);
@@ -134,7 +142,7 @@ fn run_app() -> Result<(), i32> {
     // if we have no lines, don't display anything
     let collector = collector.lock().unwrap();
     if collector.num_total() > 0 {
-        display_collected_lines(&collector);
+        display_collected_lines(&collector).unwrap();
 
         // insert newline after processing all lines
         println!();
@@ -151,28 +159,31 @@ fn run_app() -> Result<(), i32> {
     }
 }
 
-fn display_collected_lines(line_collector: &LineCollector) {
+fn display_collected_lines(line_collector: &LineCollector) -> crossterm::Result<()> {
+    let (twidth, theight) = terminal::size()?;
+
+    let mut stdout = stdout();
+
     // print the status line
-    print!(
-        "{}{}{}{} total, {} unique lines{}",
-        termion::cursor::Goto(1, 1),
-        termion::clear::CurrentLine,
-        color::Fg(color::Yellow),
-        line_collector.num_total(),
-        line_collector.num_unique(),
-        style::Reset
-    );
+    stdout
+        .queue(cursor::MoveTo(0, 0))?
+        .queue(style::PrintStyledContent(
+            format!(
+                "{} total, {} unique lines",
+                line_collector.num_total(),
+                line_collector.num_unique()
+            )
+            .yellow(),
+        ))?
+        .queue(terminal::Clear(terminal::ClearType::UntilNewLine))?;
 
-    // update the rest of the screen
-    // unwrap panics if stdout is not a tty
-    let (twidth, theight) = termion::terminal_size().unwrap();
+    // update the rest of the screen if enough vertical space
+    if theight <= 1 {
+        stdout
+            .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?
+            .flush()?;
 
-    // XXX TODO if nothing has been printed out except the first line
-    // the line is NOT printed out for some reason until "\n" is printed
-
-    // if not enough space, don't show anything
-    if theight < 2 {
-        return;
+        return Ok(());
     }
 
     // Width of the "count" field. Will be initialised when the first
@@ -188,22 +199,26 @@ fn display_collected_lines(line_collector: &LineCollector) {
             count_width = (count as f32).log10().floor() as usize + 1;
         }
 
-        print!(
-            "\n{}{:width$}",
-            termion::clear::CurrentLine,
+        stdout.queue(style::Print(format!(
+            "\n{:width$}",
             count,
             width = count_width
-        );
+        )))?;
 
         // print the line if there is still enough space
         if count_width + 2 < twidth as usize {
-            print!(
+            stdout.queue(style::Print(format!(
                 ": {:.width$}",
                 line,
                 width = twidth as usize - count_width - 2
-            );
+            )))?;
         }
+        stdout.queue(terminal::Clear(terminal::ClearType::UntilNewLine))?;
     }
 
-    print!("{}", termion::clear::AfterCursor);
+    stdout
+        .queue(terminal::Clear(terminal::ClearType::FromCursorDown))?
+        .flush()?;
+
+    Ok(())
 }
