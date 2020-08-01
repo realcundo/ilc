@@ -10,7 +10,7 @@ readme = "README.md"
 license = "Apache-2.0"
 
 [dependencies]
-termion = "1.5"
+crossterm = "0.17"
 structopt = "0.3"
 regex = "1"
 lazysort = "0.2"
