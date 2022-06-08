@@ -12,7 +12,7 @@ use structopt::StructOpt;
 
 use crossterm::{
     cursor, execute,
-    style::{self, Colorize},
+    style::{self, Stylize},
     terminal,
     tty::IsTty,
     QueueableCommand,
