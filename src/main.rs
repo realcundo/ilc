@@ -1,12 +1,7 @@
 use std::path::PathBuf;
 
 use regex::Regex;
-use std::{
-    io::{stdout, Write},
-    sync::{Arc, Mutex},
-    thread,
-    time::{self, Instant},
-};
+use std::{io::{stdout, Write}, io, sync::{Arc, Mutex}, thread, time::{self, Instant}};
 
 use structopt::StructOpt;
 
@@ -26,7 +21,7 @@ use filepaths::FilePathParser;
 use input::spawn_input_thread;
 use linecollector::LineCollector;
 
-fn parse_regex(src: &str) -> std::result::Result<Regex, regex::Error> {
+fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
     let re = Regex::new(src)?;
     match re.captures_len() {
         1 | 2 => Ok(re),
@@ -75,7 +70,7 @@ fn main() {
     };
 }
 
-fn run_app() -> std::result::Result<(), i32> {
+fn run_app() -> Result<(), i32> {
     let opt = Opt::from_args();
 
     // make sure stdout is a TTY
@@ -159,7 +154,7 @@ fn run_app() -> std::result::Result<(), i32> {
     }
 }
 
-fn display_collected_lines(line_collector: &LineCollector) -> crossterm::Result<()> {
+fn display_collected_lines(line_collector: &LineCollector) -> io::Result<()> {
     let (twidth, theight) = terminal::size()?;
 
     let mut stdout = stdout();
