@@ -1,9 +1,14 @@
 use std::path::PathBuf;
 
+use clap::Parser;
 use regex::Regex;
-use std::{io::{stdout, Write}, io, sync::{Arc, Mutex}, thread, time::{self, Instant}};
-
-use structopt::StructOpt;
+use std::{
+    io,
+    io::{stdout, Write},
+    sync::{Arc, Mutex},
+    thread,
+    time::{self, Instant},
+};
 
 use crossterm::{
     cursor, execute,
@@ -41,23 +46,23 @@ fn parse_regex(src: &str) -> Result<Regex, regex::Error> {
 /// Input files (and stdin) are opened and processed in sequence.
 ///
 /// See https://docs.rs/regex/#syntax for regex syntax.
-#[derive(StructOpt, Debug, Clone)]
-#[structopt(no_version, name = "")]
+#[derive(Parser, Debug)]
+#[command(name = "")]
 struct Opt {
     /// Only process lines matching REGEX. Non-matching files are ignored. If
     /// the REGEX contains a capture group it will be used to process the
     /// input instead of the whole line.
-    #[structopt(
+    #[arg(
         name = "REGEX",
-        short = "r",
+        short = 'r',
         long = "regex",
-        parse(try_from_str = parse_regex)
+        value_parser = parse_regex,
     )]
     matching_string: Option<Regex>,
 
     /// Files to process. If none specified stdin is used. To specify stdin
     /// explicitly pass in "-". Directories are not supported.
-    #[structopt(name = "FILE", parse(from_os_str))]
+    #[arg(name = "FILE")]
     files: Vec<PathBuf>,
 }
 
@@ -71,7 +76,7 @@ fn main() {
 }
 
 fn run_app() -> Result<(), i32> {
-    let opt = Opt::from_args();
+    let opt = Opt::parse();
 
     // make sure stdout is a TTY
     if !stdout().is_tty() {
